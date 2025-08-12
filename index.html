@@ -3,7 +3,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Finance Dashboard – Scenario Simulator (v3)</title>
+  <title>Finance Dashboard – Scenario Simulator (v4)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     :root {
@@ -19,7 +19,9 @@
     .card{background:linear-gradient(180deg,#1a2236,#171e30); border:1px solid #192341; border-radius:14px;padding:14px;box-shadow:0 10px 24px rgba(0,0,0,.25);}
     .card h3{margin:4px 0 10px 0;font-size:15px;color:#eaf2ff;letter-spacing:.2px}
     label{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:12px;margin:8px 0 6px}
-    input[type="number"], input[type="range"]{width:100%;padding:10px 12px;border:1px solid #26314f;background:#0f172a;color:#e5e7eb;border-radius:10px;outline:none}
+    input[type="number"], input[type="range"]{width:100%;padding:10px 12px;border:1px solid #26314f;background:#0f172a;color:#e5e7eb;border-radius:10px;outline:none; text-align:right;}
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     input[type="number"]:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.25)}
     .row{display:flex;gap:8px;align-items:center;margin-top:6px}
     .hint{color:var(--muted);font-size:12px;margin-top:8px}
@@ -215,6 +217,7 @@ var n,i=t("./lib/build-log"),a=t("./lib/epsilon"),o=t("./lib/intersecter"),s=t("
         revenues.push(revenue); costs.push(cost); profits.push(profit); cumSeries.push(cum);
       });
 
+      // KPIs
       const yrRev = revenues.reduce((a,b)=>a+b,0);
       const yrCost = costs.reduce((a,b)=>a+b,0);
       const yrProfit = profits.reduce((a,b)=>a+b,0);
@@ -222,6 +225,10 @@ var n,i=t("./lib/build-log"),a=t("./lib/epsilon"),o=t("./lib/intersecter"),s=t("
       const roi = s.capex>0 ? (yrProfit / s.capex * 100) : null;
       const paybackAfterBuild = (s.capex>0 && steadyProfit>0) ? (s.capex / steadyProfit) : null;
       const totalMonthsToBE = paybackAfterBuild ? (s.buildMonths + paybackAfterBuild) : null;
+
+      // Cost per kg (steady)
+      const monthlyKg = s.kgPerDay * s.daysPerMonth;
+      const costPerKg = monthlyKg > 0 ? (baseOpex / monthlyKg) : null;
 
       document.getElementById('kpis').innerHTML = `
         <div class="kpi" title="Total equipment cost you entered."><b>CAPEX</b><div class="v">${money(s.capex)}</div></div>
@@ -231,6 +238,7 @@ var n,i=t("./lib/build-log"),a=t("./lib/epsilon"),o=t("./lib/intersecter"),s=t("
         <div class="kpi" title="Profit per month once in steady state."><b>Steady Monthly Profit</b><div class="v">${money(steadyProfit)}</div></div>
         <div class="kpi" title="(Year‑1 Net Profit) / CAPEX"><b>ROI (Year‑1)</b><div class="v">${roi!==null? roi.toFixed(1)+'%':'—'}</div></div>
         <div class="kpi" title="Build months + CAPEX / steady monthly profit."><b>Break‑even (approx.)</b><div class="v">${totalMonthsToBE? totalMonthsToBE.toFixed(1)+' mo':'—'}</div></div>
+        <div class="kpi" title="Monthly opex divided by steady-state kg (kg/day × days/month)."><b>Cost per kg (steady)</b><div class="v">${costPerKg!==null? '$'+costPerKg.toFixed(2):'—'}</div></div>
       `;
 
       const trRevenue = {x: months, y: revenues, mode:'lines+markers', name:'Revenue', line:{width:3, color:'#22d3ee'}, hovertemplate:'Month %{x}<br>Revenue: %{y:$,.0f}<extra></extra>'};
